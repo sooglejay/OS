@@ -1,70 +1,25 @@
-使用下列工具，就可以实现软盘引导。
+## first of all, write your operation system source code, such as boot.asm
+## and then compile it into a bin file
+nasm -f bin -o boot.bin  boot.asm
 
-1.dd：在指定大小内对一个文件进行拷贝，并在拷贝的同时进行指定的转换。
+## then build a floppy file 
+dd  conv=notrunc if=boot.bin of=myfirst.flp
 
-http://www.cnblogs.com/dkblog/archive/2009/09/18/1980715.html
-
-这个链接对dd进行了详细的讲解。
-
-2.nasm：汇编的编译工具，可以生成.bin文件。
-
-3.qemu：通过阅读一些大牛的博客，我现在将它大致理解为虚拟机。
-
-http://www.cnblogs.com/youxia/p/linux019.html
-
-这个链接对qemu进行了概述。
-
-好了，既然环境、工具都准备好了，那我们便开始编写Helloworld吧！
-
-1.编写Helleworld的代码
-
-1.1.创建asm文件
+## or img file 
+## dd conv=sync if=boot.bin of=boot.img bs=1440k count=1 
 
 
-
-vi boot.asm
-
-
-
-1.2.编写boot.asm文件
+## you maybe want to test and see your operation system in qemu emulation
+qemu-system-x86_64 -fda myfirst.flp -boot a -m 64 -localtime
 
 
+mkdir csdisdo
+mv myfirst.flp  csdisdo  
 
-        org 07c00h
-        mov ax,cs
-        mov ds,ax
-        mov es,ax
-        call DispStr
-        jmp $
-DispStr:
-        mov ax,BootMessage
-        mov bp,ax
-        mov cx,16
-        mov ax,01301h
-        mov bx,000ch
-        mov dl,0
-        int 10h
-        ret
-BootMessage:    db "Hello,OS world!"
-times 510-($-$$) db 0
+## or: mv boot.img cdisdo/
 
-
-dw 0xaa55
-
-
-
-
-
-1.3.编写boot.asm文件并生成boot.bin文件
-
-nasm boot.asm -o boot.bin
-
-1.4.生成boot.img镜像文件
-
-dd conv=sync if=boot.bin of=boot.img bs=1440k count=1
-
-1.5.将helloworld跑起来
-
-qemu-system-x86_64 -fda boot.img -boot a -m 64 -localtime
-
-好了，这样helloworld就能跑起来了，这和我们以往的编程是不同的，它是在裸机上面运行的，不依赖任何软件！
+ 
+## after install cdrtools: brew install cdrtools
+## here is your first operation system called jw.iso
+## you can burn it into CD
+mkisofs -o jw.iso -b boot.img  cdisdo/
